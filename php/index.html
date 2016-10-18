@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>VotAction</title>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+
+<body ng-app="votaction">
+<div ng-cloak ng-controller="adminCtrl" class="w3-container w3-margin w3-jumbo">
+	<header class="w3-container w3-light-grey w3-padding-16">
+		Sistema de votação online
+                <br>
+                <label class="w3-right">Seção atual={{sessionId}}</label>
+	</header>
+	<div ng-show="status=='menu'">
+		<button ng-click="newSession()" class="w3-btn-block w3-green w3-round-large w3-margin-4">Iniciar uma comissão</button>
+		<button ng-click="joinSession()" class="w3-btn-block w3-yellow w3-round-large w3-margin-4">Participar de uma comissão</button>
+		<button ng-click="startResults()" class="w3-btn-block w3-blue w3-round-large w3-margin-4">Resultados</button>
+	</div>
+	<div ng-show="status=='newRole'">
+		<form >
+			<h1>Iniciando votação de um novo cargo</h1>
+			<label>Nome do cargo:</label>
+			<input class="w3-input w3-border" type="text" ng-model="roleName" ng-disabled="false" placeholder="Ancião, Diretor, Chefe, ...">
+			<br>
+			<label>Nomes indicados:</label>
+			<textarea  rows="10" class="w3-input w3-border" ng-model="roleOptions" ng-disabled="false"></textarea>
+			<br>
+			<button class="w3-btn-block w3-green w3-ripple  w3-round-large" ng-click="startResults()" ng-disabled="error || incomplete">&#10004; Iniciar votação</button>
+		</form>
+	</div>
+	<div ng-show="status=='vote'">
+		<form >
+			<h1>Vote agora</h1>
+			<label>Nome do cargo:<b>{{roleName}}</b></label>
+			<br>
+			<label>Nomes indicados:</label>
+			<select required="true" ng-model="roleVote" ng-options="x for x in roleOptions"></select>
+			<button class="w3-btn-block w3-green w3-ripple  w3-round-large" ng-click="confirmVote()" ng-disabled="status!='vote'">&#10004; Confirmar</button>
+		</form>
+	</div>
+	<div ng-show="status=='results'">
+		<h1>Apuração atual:</h1>
+		<label>Nome do cargo:</label> <b>{{roleName}}</b><br>
+		<label>Total de votos:</label> <b>{{roleVotesCount}}</b><br>
+
+		<ul class="w3-ul">
+		  <li ng-repeat="x in roleVotes | orderBy: 'total': true">{{x.total}} = {{x.roleName}} </li>
+		</ul>
+		<br>
+		<button class="w3-btn-block w3-green w3-ripple  w3-round-large" ng-click="startNewRole()">&#10004; Novo cargo</button>
+	</div>
+	<footer class="w3-container w3-grey w3-padding-4">
+		<label class="w3-right"><i>{{message}}</i></label>
+	</footer>
+</div>
+<label class="w3-right w3-large">Desenvolvido por Lucio Valentin: <i>versão 0.1b</i></label>
+
+</body>
+
+<script src="index.js"></script>
+
+</html>
