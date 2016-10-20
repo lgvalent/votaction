@@ -1,8 +1,30 @@
 <?php
- header("Content-Type: application/json; charset=UTF-8");
+ $sessionOwner = null;
+ function isSessionOwner($sessionFile, $clientId){
+   if (file_exists($sessionFile)) {
+     $file = fopen($sessionFile, 'r');
+     $sessionOwner = rtrim(fgets($file));
+     fclose($file);
+     return $sessionOwner == $clientId;
+   }
+   return true;
+ }
+
+ /** Client identification */
+ $cookieNameClientID = 'clientId';
+ $clientId;
+ if(isset($_COOKIE[$cookieNameClientID]))
+   $clientId = $_COOKIE[$cookieNameClientID];
+ else {
+   $clientId = uniqid();
+   setcookie($cookieNameClientID, $clientId, strtotime( '+30 days' ) );
+ }
+
+ header('Content-Type: application/json; charset=UTF-8');
 
  $sessionId = $_REQUEST['sessionId'];
  $action =  $_REQUEST['action'];
+ $token = sem_get(1, 1); // Control concurrent access
 
  $sessionFile = 'sessions/'.$sessionId;
  if (!file_exists('sessions')) mkdir('sessions', 0777, true);
@@ -11,49 +33,80 @@
   if (file_exists($sessionFile)) {
         unlink($sessionFile);
     }
-  echo '{ "status": "Sessão apagada:'.$sessionId.'"}';
+  echo '{ "error": 0, "status": "Sessão apagada:'.$sessionId.'"}';
  }
 
  if($action=='newSession'){
-  $file = fopen($sessionFile, 'w');
-  fclose($file);
-  echo '{ "status": "Sessão registrada:'.$sessionId.'"}';
+  if (!isSessionOwner($sessionFile, $clientId)){
+    echo '{ "error": 1, "status": "Sessão já existente. Utilize a ação RESET para apagá-la:'.$sessionId.'/'.$sessionOwner.'/'.$clientId.'"}';
+  }else{
+    sem_acquire($token);
+    $file = fopen($sessionFile, 'w');
+    if(!$file)
+      echo '{ "error": 1, "status": "Erro ao registrar nova sessão '.$_REQUEST['sessionId'].'"}';
+    else{
+      fwrite($file, $clientId.PHP_EOL);
+      fclose($file);
+      sem_release($token); 
+      echo '{ "error": 0, "status": "Sessão registrada:'.$sessionId.'"}';
+    }
+  }
  }
 
  if($action=='newRole'){
-  $file = fopen($sessionFile, 'w');
-  fwrite($file, $_REQUEST['roleName'].PHP_EOL);
-  fwrite($file, $_REQUEST['roleOptions'].PHP_EOL);
-  fclose($file);
-  echo '{ "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
+  if (isSessionOwner($sessionFile, $clientId)){
+    sem_acquire($token);
+    $file = fopen($sessionFile, 'w');
+    if(!$file)
+      echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
+    else{
+      fwrite($file, $clientId.PHP_EOL);
+      fwrite($file, $_REQUEST['roleName'].PHP_EOL);
+      fwrite($file, $_REQUEST['roleOptions'].PHP_EOL);
+      fclose($file);
+      sem_release($token); 
+      echo '{ "error": 0, "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
+    }
+  }else{
+   echo '{ "error": 1, "status": "Sessão controlada por outro cliente:'.$_REQUEST['sessionId'].'"}';
+  }
  }
 
  if($action=='newVote'){
-  $token = sem_get($action, 1); // Control concurrent access
   sem_acquire($token);
 
   $file = fopen($sessionFile, 'a');
-  fwrite($file, $_REQUEST['roleVote'].PHP_EOL);
-  fclose($file);
+  if(!$file)
+    echo '{ "error": 1, "status": "Erro ao registrar votação na sessão '.$_REQUEST['sessionId'].'"}';
+  else{
+    fwrite($file, $_REQUEST['roleVote'].PHP_EOL);
+    fclose($file);
   
-  sem_release($token); 
+    sem_release($token); 
   
-  echo '{ "status": "Novo voto registrado:'.$_REQUEST['roleVote'].'"}';
+    echo '{ "error": 0, "status": "Novo voto registrado para '.$_REQUEST['roleVote'].'"}';
+  }
  }
 
  if($action=='results'){
   $file = fopen($sessionFile, 'r');
-  $roleName = rtrim(fgets($file));
-  $roleOptions = rtrim(fgets($file));
-  $roleVotes = array();
-  while(!feof($file)){
-   $line = fgets($file);
-   if($line) $roleVotes[] = rtrim($line); //Last line empty
+  if(!$file)
+    echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
+  else{
+    $sessionOwner = rtrim(fgets($file));
+    $roleName = rtrim(fgets($file));
+    $roleOptions = rtrim(fgets($file));
+    $roleVotes = array();
+    while(!feof($file)){
+      $line = fgets($file);
+      if($line) $roleVotes[] = rtrim($line); //Last line empty
+    }
+    fclose($file);
+
+    $results = array("roleName"=>$roleName, "roleOptions"=>$roleOptions, "roleVotes"=>$roleVotes, "sessionAdmin"=> ($sessionOwner==$clientId));
+
+    echo json_encode($results);
   }
-  fclose($file);
 
-  $results = array("roleName"=>$roleName, "roleOptions"=>$roleOptions, "roleVotes"=>$roleVotes);
-
-  echo json_encode($results);
  }
 ?>

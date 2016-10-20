@@ -5,12 +5,13 @@
 	<title>VotAction</title>
 </head>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+<!-- link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css" -->
+<link rel="stylesheet" href="w3.css">
 
 <body ng-app="votaction">
 <div ng-cloak ng-controller="adminCtrl" class="w3-container w3-margin w3-jumbo">
 	<header class="w3-container w3-light-grey w3-padding-16">
-		Sistema de votação online
+		Sistema de votação online<a class="w3-link" href="#" onclick="window.history.go()">&reg;</a>
                 <br>
                 <label class="w3-right">Seção atual={{sessionId}}</label>
 	</header>
@@ -36,8 +37,10 @@
 			<h1>Vote agora</h1>
 			<label>Nome do cargo:<b>{{roleName}}</b></label>
 			<br>
-			<label>Nomes indicados:</label>
-			<select required="true" ng-model="roleVote" ng-options="x for x in roleOptions"></select>
+			<label>Candidatos:</label>
+			<select required="true" ng-model="roleVote" ng-options="x for x in roleOptions">
+				<option disabled value="">Escolha aqui</option>
+			</select>
 			<button class="w3-btn-block w3-green w3-ripple  w3-round-large" ng-click="confirmVote()" ng-disabled="status!='vote'">&#10004; Confirmar</button>
 		</form>
 	</div>
@@ -50,7 +53,7 @@
 		  <li ng-repeat="x in roleVotes | orderBy: 'total': true">{{x.total}} = {{x.roleName}} </li>
 		</ul>
 		<br>
-		<button class="w3-btn-block w3-green w3-ripple  w3-round-large" ng-click="startNewRole()">&#10004; Novo cargo</button>
+		<button class="w3-btn-block w3-green w3-ripple  w3-round-large" ng-click="startNewRole()" ng-show="sessionAdmin">&#10004; Novo cargo</button>
 	</div>
 	<footer class="w3-container w3-grey w3-padding-4">
 		<label class="w3-right"><i>{{message}}</i></label>
