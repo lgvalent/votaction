@@ -1,6 +1,7 @@
 <?php
  $sessionOwner = null;
  function isSessionOwner($sessionFile, $clientId){
+   global $sessionOwner;
    if (file_exists($sessionFile)) {
      $file = fopen($sessionFile, 'r');
      $sessionOwner = rtrim(fgets($file));
@@ -63,6 +64,7 @@
       fwrite($file, $clientId.PHP_EOL);
       fwrite($file, $_REQUEST['roleName'].PHP_EOL);
       fwrite($file, $_REQUEST['roleOptions'].PHP_EOL);
+      fwrite($file, $_REQUEST['roleMaxOptions'].PHP_EOL);
       fclose($file);
       sem_release($token); 
       echo '{ "error": 0, "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
@@ -79,7 +81,10 @@
   if(!$file)
     echo '{ "error": 1, "status": "Erro ao registrar votação na sessão '.$_REQUEST['sessionId'].'"}';
   else{
-    fwrite($file, $_REQUEST['roleVote'].PHP_EOL);
+    $roleVotes = explode ("," , $_REQUEST['roleVote']);
+    foreach ($roleVotes as &$value) {
+      fwrite($file, $value.PHP_EOL);
+    }
     fclose($file);
   
     sem_release($token); 
@@ -96,6 +101,7 @@
     $sessionOwner = rtrim(fgets($file));
     $roleName = rtrim(fgets($file));
     $roleOptions = rtrim(fgets($file));
+    $roleMaxOptions = rtrim(fgets($file));
     $roleVotes = array();
     while(!feof($file)){
       $line = fgets($file);
@@ -103,7 +109,7 @@
     }
     fclose($file);
 
-    $results = array("roleName"=>$roleName, "roleOptions"=>$roleOptions, "roleVotes"=>$roleVotes, "sessionAdmin"=> ($sessionOwner==$clientId));
+    $results = array("roleName"=>$roleName, "roleOptions"=>$roleOptions, "roleMaxOptions"=>$roleMaxOptions, "roleVotes"=>$roleVotes, "sessionAdmin"=> ($sessionOwner==$clientId));
 
     echo json_encode($results);
   }
