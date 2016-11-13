@@ -28,6 +28,7 @@
  $token = sem_get(1, 1); // Control concurrent access
 
  $sessionFile = 'sessions/'.$sessionId;
+ $sessionVotesFile = 'sessions/votes.'.$sessionId;
  if (!file_exists('sessions')) mkdir('sessions', 0777, true);
  
  if($action=='reset'){
@@ -58,7 +59,8 @@
   if (isSessionOwner($sessionFile, $clientId)){
     sem_acquire($token);
     $file = fopen($sessionFile, 'w');
-    if(!$file)
+    $fileV = fopen($sessionVotesFile, 'w');
+    if(!$file OR !$fileV)
       echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
     else{
       fwrite($file, $clientId.PHP_EOL);
@@ -66,6 +68,10 @@
       fwrite($file, $_REQUEST['roleOptions'].PHP_EOL);
       fwrite($file, $_REQUEST['roleMaxOptions'].PHP_EOL);
       fclose($file);
+
+      fwrite($fileV, $clientId.PHP_EOL);
+      fclose($fileV);
+
       sem_release($token); 
       echo '{ "error": 0, "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
     }
@@ -78,18 +84,34 @@
   sem_acquire($token);
 
   $file = fopen($sessionFile, 'a');
-  if(!$file)
+  $fileV = fopen($sessionVotesFile, 'a');
+  if(!$file OR !$fileV)
     echo '{ "error": 1, "status": "Erro ao registrar votação na sessão '.$_REQUEST['sessionId'].'"}';
   else{
-    $roleVotes = explode ("," , $_REQUEST['roleVote']);
-    foreach ($roleVotes as &$value) {
-      fwrite($file, $value.PHP_EOL);
+    /** Check one vote per client */
+    $foundVote = false;
+//    while(!feof($fileV)){
+//      $line = fgets($fileV);
+//      if($line == $clientId){
+//         $foundVote = true;
+//         break;
+//      }
+//    }
+
+    if($foundVote){
+      echo '{ "error": 1, "status": "Erro ao votar. Voto já foi registrado anteriormente para '.$_REQUEST['roleVote'].'"}';
+    }else{
+      $roleVotes = explode ("," , $_REQUEST['roleVote']);
+      foreach ($roleVotes as &$value) {
+        fwrite($file, $value.PHP_EOL);
+      }    
+      echo '{ "error": 0, "status": "Novo voto registrado para '.$_REQUEST['roleVote'].'"}';
     }
+
+    fclose($fileV);
     fclose($file);
   
     sem_release($token); 
-  
-    echo '{ "error": 0, "status": "Novo voto registrado para '.$_REQUEST['roleVote'].'"}';
   }
  }
 
