@@ -101,7 +101,7 @@
     $sessionOwner = rtrim(fgets($file));
     $roleName = rtrim(fgets($file));
     $roleOptions = rtrim(fgets($file));
-    $roleMaxOptions = rtrim(fgets($file));
+    $roleMaxOptions = (int)rtrim(fgets($file));
     $roleVotes = array();
     while(!feof($file)){
       $line = fgets($file);

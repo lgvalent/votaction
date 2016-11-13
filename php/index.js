@@ -22,6 +22,7 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
         $scope.roleOptions = "";
         $scope.roleMaxOptions = 1;
         $scope.roleVote = "";
+        $scope.roleVotesCount = 0;
 
         $scope.sessionId = "Não definido";
 
@@ -38,20 +39,37 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            }
         };
 
+        $scope.confirmNewRole = function(){
+           $scope.message = "Registrando novo cargo...";
+
+           $scope.roleOptions = $scope.roleOptions.replace(/\n/g, "<br>");
+           actionService.getData($scope, 'newRole').then(
+             function(response){
+                $scope.message = response.data.status;
+                beepOk();
+                setTimeout($scope.startResults, 1000);
+             });
+        };
+
         $scope.startVote = function(){
            $scope.status = "waitNewRole";
            $scope.message = "Aguardando nova votação...";
            $scope.roleVote = "";
            actionService.getData($scope, 'results').then(
              function(response){
-               if($scope.roleName != response.data.roleName){
-                 $scope.roleName = response.data.roleName;
-                 $scope.roleOptions = response.data.roleOptions.split("<br>");
-                 $scope.roleMaxOptions = response.data.roleMaxOptions;
-                 $scope.status = "vote";
-                 $scope.message = "Votação autorizada";
-               }else{
-                  setTimeout($scope.startVote, 2000);
+               try{
+                 if($scope.roleName != response.data.roleName){
+                   $scope.roleName = response.data.roleName;
+                   $scope.roleOptions = response.data.roleOptions.split("<br>");
+                   $scope.roleMaxOptions = response.data.roleMaxOptions;
+                   $scope.status = "vote";
+                   $scope.message = "Votação autorizada";
+                 }else{
+                    setTimeout($scope.startVote, 2000);
+                 }
+               }catch(error){
+                   $scope.message = error.message;
+                   setTimeout($scope.startVote, 2000);
                }
              });
         };
@@ -75,11 +93,6 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            if($scope.sessionId == "Não definido")
              $scope.sessionId = prompt("Digite a chave da nova sessão de votação que você está criando");
            else{
-            $scope.roleOptions = $scope.roleOptions.replace(/\n/g, "<br>");
-            actionService.getData($scope, 'newRole').then(
-             function(response){
-                $scope.message = response.data.status;
-             });
             }
 
            stop = $interval(function(){
@@ -110,6 +123,7 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
 
         $scope.newSession = function(){
            $scope.sessionId = prompt("Digite a chave da nova sessão de votação que você está criando");
+           $scope.message = "Iniciando nova sessão " + $scope.sessionId + "...";
 
            actionService.getData($scope, 'newSession').then(
              function(response){
