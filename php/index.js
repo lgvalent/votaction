@@ -5,7 +5,7 @@ app.service('actionService', function($http) {
       console.log("Action:"+action);
       return $http({
           method: 'GET',
-          url: 'action.php?sessionId=' + scope.sessionId + '&action=' + action + '&roleName=' + scope.roleName+ '&roleOptions=' + scope.roleOptions+ '&roleMaxOptions=' + scope.roleMaxOptions+ '&roleVote=' + scope.roleVote
+          url: 'action.php?sessionId=' + scope.sessionId + '&action=' + action + '&roleName=' + scope.roleName+ '&roleOptions=' + scope.roleOptionsTxt+ '&roleMaxOptions=' + scope.roleMaxOptions+ '&roleVote=' + scope.roleVote
       }).success(function(response){
         return response;
       }).error(function(response){
@@ -19,7 +19,8 @@ var stop = undefined;
 app.controller("adminCtrl", function($scope, actionService, $interval) {
         $scope.status = "menu";
         $scope.roleName = "";
-        $scope.roleOptions = "";
+        $scope.roleOptionsTxt = "";
+        $scope.roleOptions = [];
         $scope.roleMaxOptions = 1;
         $scope.roleVote = "";
         $scope.roleVotesCount = 0;
@@ -30,7 +31,8 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            $scope.status = "newRole";
 
            $scope.roleName = "";
-           $scope.roleOptions = "";
+           $scope.roleOptionsTxt = "";
+           $scope.roleOptions = [];
            $scope.roleMaxOptions = 1;
 
            if(stop){
@@ -42,7 +44,7 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
         $scope.confirmNewRole = function(){
            $scope.message = "Registrando novo cargo...";
 
-           $scope.roleOptions = $scope.roleOptions.replace(/\n/g, "<br>");
+           $scope.roleOptionsTxt = $scope.roleOptionsTxt.replace(/\n/g, "<br>");
            actionService.getData($scope, 'newRole').then(
              function(response){
                 $scope.message = response.data.status;
@@ -79,7 +81,7 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
         };
 
         $scope.confirmVote = function(){
-           $scope.roleVote = new Array();
+           $scope.roleVote = [];
            for(var i in $scope.roleOptions)
               if($scope.roleOptions[i].selected)
                 $scope.roleVote.push($scope.roleOptions[i].name);
@@ -162,3 +164,4 @@ function beepOk() {
   var snd = new Audio("toque.ogg");
   snd.play();
 }
+

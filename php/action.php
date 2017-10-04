@@ -28,7 +28,7 @@
  $token = sem_get(1, 1); // Control concurrent access
 
  $sessionFile = 'sessions/'.$sessionId;
- $sessionVotesFile = 'sessions/votes.'.$sessionId;
+ $sessionVotesFile = 'sessions/'.$sessionId.'.votes';
  if (!file_exists('sessions')) mkdir('sessions', 0777, true);
  
  if($action=='reset'){
@@ -105,6 +105,7 @@
       foreach ($roleVotes as &$value) {
         fwrite($file, $value.PHP_EOL);
       }    
+      fwrite($fileV, $clientId.PHP_EOL);
       echo '{ "error": 0, "status": "Novo voto registrado para '.$_REQUEST['roleVote'].'"}';
     }
 
