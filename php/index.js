@@ -18,7 +18,7 @@ app.service('actionService', function($http) {
 var stop = undefined;
 app.controller("adminCtrl", function($scope, actionService, $interval) {
         $scope.status = "menu";
-        $scope.roleName = "";
+        $scope.roleName = "NO_DATA";
         $scope.roleOptionsTxt = "";
         $scope.roleOptions = [];
         $scope.roleMaxOptions = 1;
