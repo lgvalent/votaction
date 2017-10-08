@@ -161,7 +161,7 @@ function beepError() {
 }
 
 function beepOk() {
-  var snd = new Audio("toque.ogg");
+  var snd = new Audio("toque.mp3");
   snd.play();
 }
 
