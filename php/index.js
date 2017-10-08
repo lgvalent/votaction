@@ -25,7 +25,7 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
         $scope.roleVote = "";
         $scope.roleVotesCount = 0;
 
-        $scope.sessionId = "Não definido";
+        $scope.sessionId = "fp11"; // Defina com um ID válido para agilizar os testee
 
         $scope.startNewRole = function(){
            $scope.status = "newRole";
@@ -85,8 +85,8 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            for(var i in $scope.roleOptions)
               if($scope.roleOptions[i].selected)
                 $scope.roleVote.push($scope.roleOptions[i].name);
-           if($scope.roleVote.length > $scope.roleMaxOptions){
-              $scope.message = "Erro: Você selecionou " + $scope.roleVote.length + " opções.";
+           if($scope.roleVote.length != $scope.roleMaxOptions){
+              $scope.message = "Erro: Você selecionou " + $scope.roleVote.length + " opções. Escolha " + $scope.roleMaxOptions + ".";
               beepError();
               return;
            }
