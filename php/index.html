@@ -31,13 +31,13 @@
 				</div>
 
 				<div class="form-group">
-	 			<label class="control-label">Máximo de escolhas</label>
+	 			<label class="control-label">Quantas escolhas podem ser marcadas?</label>
 	 			<input required type="number" class="form-control form-control-sm" ng-model="roleMaxOptions" value="" min="1" max="100">
 				</div>
 
 				<div class="form-group">
 	 			<label class="control-label">Nomes indicados</label>
-	 			<textarea  required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"></textarea>
+	 			<textarea  required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea>
 				</div>
 
 				<button class="btn btn-success btn-block" ng-click="confirmNewRole()" ng-disabled="error || incomplete">&#10004; Iniciar votação</button>
@@ -48,12 +48,12 @@
 		<div class="card-header">Vote agora</div>
 		<div class="card-body">
 			<p class="card-title">Nome do cargo: <span class="badge badge-secondary">{{roleName}}</span></p>
-			<p class="card-text">Escolha no máximo <span class="badge badge-secondary">{{roleMaxOptions}}</span> opção(ões).</p>
+			<p class="card-text">Você já escolheu <span class="badge badge-secondary" ng-style="roleVote.length == roleMaxOptions && {'background-color':'green'}  || roleVote.length != roleMaxOptions && {'background-color':'red'}" >{{roleVote.length}}</span> opção(ões) de <span class="badge badge-secondary">{{roleMaxOptions}}</span>.</p>
 			<form>
 				<div ng-repeat="option in roleOptions">
 					<div class="form-check">
 						<label class="form-check-label text-success">
-		 				<input class="form-check-input" type="checkbox" name="selectedFruits[]" value="{{option.name}}" ng-model="option.selected">
+		 				<input class="form-check-input" type="checkbox" value="{{option.name}}" ng-model="option.selected" ng-change="updateRoleVote()">
 		 				{{option.name}}
 			  			</label>
 					 </div>
@@ -78,7 +78,7 @@
 		<button class="btn btn-primary btn-block" ng-click="startNewRole()" ng-show="sessionAdmin">&#10004; Novo cargo</button>
 	</div>
 	<br/>
-	<div id="status" class="progress">
+	<div id="status" class="progress fixed-bottom">
 		<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%">
 			<label class=""><i>{{message}}</i></label>
 		</div>
@@ -91,4 +91,3 @@
 <script src="index.js"></script>
 </body>
 </html>
-
