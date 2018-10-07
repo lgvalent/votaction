@@ -1,8 +1,9 @@
 <?php
  $sessionOwner = null;
  function isSessionOwner($sessionFile, $clientId){
-   global $sessionOwner;
-   if (file_exists($sessionFile)) {
+  global $sessionOwner;
+  global $sessionRoleActive;
+  if (file_exists($sessionFile)) {
      $file = fopen($sessionFile, 'r');
      $sessionOwner = rtrim(fgets($file));
      fclose($file);
@@ -81,6 +82,20 @@
  }
 
  if($action=='newVote'){
+  $file = fopen($sessionFile, 'r');
+  if(!$file){
+    echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
+    return;
+  }else{
+    $sessionOwner = rtrim(fgets($file));
+    $roleName = rtrim(fgets($file));
+  }
+
+  if($roleName != $_REQUEST['roleName']){
+    echo '{ "error": 1, "status": "A votação atual não corresponde mais a '.$_REQUEST['roleName'].'"}';
+    return;
+  }
+
   sem_acquire($token);
 
   $file = fopen($sessionFile, 'a');

@@ -60,7 +60,7 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            actionService.getData($scope, 'results').then(
              function(response){
                try{
-                 if($scope.roleName != response.data.roleName){
+                 if(response.data.roleName != "" && $scope.roleName != response.data.roleName){
                    $scope.roleName = response.data.roleName;
                    $scope.roleOptions = new Array();
                    var options = response.data.roleOptions.split("<br>");
@@ -104,10 +104,13 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            }
            $scope.status = "confirmVote";
            $scope.message = "Registrando o voto...";
-           beepOk();
            actionService.getData($scope, 'newVote').then(
              function(response){
                 $scope.message = response.data.status;
+                if(response.data.error == 0)
+                   beepOk();
+                else
+                   beepError();
                 setTimeout($scope.startVote, 5000);
              });
         };
@@ -126,8 +129,8 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
                  if(response.data.error){
                    $scope.message = response.data.status;
                  }else{
-                   $scope.roleName = response.data.roleName;
-                   $scope.roleMaxOptions = response.data.roleMaxOptions;
+                  $scope.roleName = response.data.roleName;
+                  $scope.roleMaxOptions = response.data.roleMaxOptions;
                    $scope.roleVotesCount = 0;
                    var votes  = {};
                    response.data.roleVotes.forEach(function(item, index){
