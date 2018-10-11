@@ -24,7 +24,7 @@
 	<div ng-show="status=='newRole'" class="card">
 		<div class="card-header">Iniciando votação de um novo cargo</div>
 		<div class="card-body">
-			<form>
+			<form name="newRoleForm">
 				<div class="form-group">
 	 			<label class="control-label">Nome do cargo</label>
 		 		<input required class="form-control" type="text" required ng-model="roleName" ng-disabled="false" placeholder="Ancião, Diretor, Chefe, ...">
@@ -40,7 +40,7 @@
 	 			<textarea  required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea>
 				</div>
 
-				<button class="btn btn-success btn-block" ng-click="confirmNewRole()" ng-disabled="error || incomplete">&#10004; Iniciar votação</button>
+				<button class="btn btn-success btn-block" ng-click="confirmNewRole()" ng-disabled="newRoleForm.$invalid">&#10004; Iniciar votação</button>
 			</form>
 		</div>
 	</div>
@@ -58,7 +58,7 @@
 			  			</label>
 					 </div>
 				</div>
-				<button class="btn btn-warning btn-block" ng-click="confirmVote()" ng-disabled="status!='vote'">&#10004; Confirmar</button>
+				<button class="btn btn-warning btn-block" ng-click="confirmVote()" ng-disabled="roleVote.length != roleMaxOptions">&#10004; Confirmar</button>
 			</form>
 		</div>
 	</div>
