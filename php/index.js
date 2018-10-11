@@ -60,7 +60,7 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            actionService.getData($scope, 'results').then(
              function(response){
                try{
-                 if(response.data.roleName != "" && $scope.roleName != response.data.roleName){
+                if(response.data.roleName && response.data.roleName != "" && $scope.roleName != response.data.roleName){
                    $scope.roleName = response.data.roleName;
                    $scope.roleOptions = new Array();
                    var options = response.data.roleOptions.split("<br>");
