@@ -71,7 +71,7 @@
 
 			<ol class="container">
 				<li ng-repeat="x in roleVotes | orderBy: 'total': true" class="d-flex justify-content-between">
-					{{$index+1}}º - {{x.roleName}} <span><span ng-if="$index<roleMaxOptions" >(Eleito)</span><span ng-if="($index<roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions].total==x.total) || ($index>=roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions-1].total==x.total)" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
+					{{$index+1}}º - {{x.roleName}} <span><span ng-if="$index<roleMaxOptions && !(($index<roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions].total==x.total) || ($index>=roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions-1].total==x.total))" >(Eleito)</span><span ng-if="($index<roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions].total==x.total) || ($index>=roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions-1].total==x.total)" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
 				</li>
 			</ol>
 		</div>
