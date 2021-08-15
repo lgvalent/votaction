@@ -70,7 +70,6 @@
       fwrite($file, $_REQUEST['roleMaxOptions'].PHP_EOL);
       fclose($file);
 
-      fwrite($fileV, $clientId.PHP_EOL);
       fclose($fileV);
 
       echo '{ "error": 0, "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
