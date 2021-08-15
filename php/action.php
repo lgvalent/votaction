@@ -50,9 +50,9 @@
     else{
       fwrite($file, $clientId.PHP_EOL);
       fclose($file);
-      sem_release($token); 
       echo '{ "error": 0, "status": "Sessão registrada:'.$sessionId.'"}';
     }
+    sem_release($token); 
   }
  }
 
@@ -73,9 +73,9 @@
       fwrite($fileV, $clientId.PHP_EOL);
       fclose($fileV);
 
-      sem_release($token); 
       echo '{ "error": 0, "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
     }
+    sem_release($token); 
   }else{
    echo '{ "error": 1, "status": "Sessão controlada por outro cliente:'.$_REQUEST['sessionId'].'"}';
   }
@@ -99,22 +99,24 @@
   sem_acquire($token);
 
   $file = fopen($sessionFile, 'a');
-  $fileV = fopen($sessionVotesFile, 'a');
+  $fileV = fopen($sessionVotesFile, 'r');
   if(!$file OR !$fileV)
     echo '{ "error": 1, "status": "Erro ao registrar votação na sessão '.$_REQUEST['sessionId'].'"}';
   else{
     /** Check one vote per client */
     $foundVote = false;
-//    while(!feof($fileV)){
-//      $line = fgets($fileV);
-//      if($line == $clientId){
-//         $foundVote = true;
-//         break;
-//      }
-//    }
-
+    while(!feof($fileV)){
+	  $line = rtrim(fgets($fileV));
+      if($line == $clientId){
+         $foundVote = true;
+         break;
+      }
+    }
+    fclose($fileV);
+    $fileV = fopen($sessionVotesFile, 'a');
+	  
     if($foundVote){
-      echo '{ "error": 1, "status": "Erro ao votar. Voto já foi registrado anteriormente para '.$_REQUEST['roleVote'].'"}';
+      echo '{ "error": 1, "status": "Erro ao votar. Voto já foi registrado anteriormente para '.$_REQUEST['roleName'].'"}';
     }else{
       $roleVotes = explode ("," , $_REQUEST['roleVote']);
       foreach ($roleVotes as &$value) {
@@ -127,8 +129,8 @@
     fclose($fileV);
     fclose($file);
   
-    sem_release($token); 
   }
+  sem_release($token); 
  }
 
  if($action=='results'){
