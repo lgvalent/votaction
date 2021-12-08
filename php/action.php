@@ -1,197 +1,222 @@
-var app = angular.module("votaction", []); 
-
-app.service('actionService', function($http) {
-  this.getData = function(scope, action) {
-      console.log("Action:"+action);
-      return $http({
-          method: 'GET',
-          url: 'action.php?sessionId=' + scope.sessionId + '&action=' + action + '&roleName=' + scope.roleName+ '&roleOptions=' + scope.roleOptionsTxt+ '&roleMaxOptions=' + scope.roleMaxOptions+ '&roleVote=' + scope.roleVote
-      }).success(function(response){
-        return response;
-      }).error(function(response){
-         beepError();
-         return null ;
-      });
+<?php
+ $sessionOwner = null;
+ function isSessionOwner($sessionFile, $clientId){
+  global $sessionOwner;
+  global $sessionRoleActive;
+  if (file_exists($sessionFile)) {
+     $file = fopen($sessionFile, 'r');
+     $sessionOwner = rtrim(fgets($file));
+     fclose($file);
+     return $sessionOwner == $clientId;
    }
- });
+   return true;
+ }
 
-var stop = undefined;
-app.controller("adminCtrl", function($scope, actionService, $interval) {
-        $scope.status = "menu";
-        $scope.roleName = "NO_DATA";
-        $scope.roleOptionsTxt = "";
-        $scope.roleOptions = [];
-        $scope.roleMaxOptions = 1;
-        $scope.roleVote = "";
-        $scope.roleVotesCount = 0;
+ header('Content-Type: application/json; charset=UTF-8');
 
-        $scope.sessionId = "Não definido"; // Defina com um ID válido para agilizar os teste
+ $sessionId = $_REQUEST['sessionId'];
+ $action =  $_REQUEST['action'];
+ $token = sem_get(1, 1); // Control concurrent access
 
-        $scope.startNewRole = function(){
-           $scope.status = "newRole";
+ $sessionFile = 'sessions/'.$sessionId;
+ $sessionVotesFile = 'sessions/'.$sessionId.'.votes';
+ $sessionClientsFile = 'sessions/'.$sessionId.'.clients';
+ if (!file_exists('sessions')) mkdir('sessions', 0777, true);
+ 
+ /** Client identification */
+ $cookieClientID = 'clientId';
+ $clientId;
+ if(isset($_COOKIE[$cookieClientID]))
+   $clientId = $_COOKIE[$cookieClientID];
+ else {
+   $clientId = uniqid();
+   setcookie($cookieClientID, $clientId, strtotime( '+30 days' ) );
+ }
 
-           $scope.roleName = "";
-           $scope.roleOptionsTxt = "";
-           $scope.roleOptions = [];
-           $scope.roleMaxOptions = 1;
+ if($action=='reset'){
+  if (file_exists($sessionFile)) {
+        unlink($sessionFile);
+        unlink($sessionVotesFile);
+        unlink($sessionClientsFile);
+    }
+  echo '{ "error": 0, "status": "Sessão apagada:'.$sessionId.'"}';
+ }
 
-           if(stop){
-              $interval.cancel(stop);
-              stop = undefined;
-           }
-        };
+ if($action=='newSession'){
+  if (!isSessionOwner($sessionFile, $clientId)){
+    echo '{ "error": 1, "status": "Sessão já existente. Utilize a ação RESET para apagá-la:'.$sessionId.'/'.$sessionOwner.'/'.$clientId.'"}';
+  }else{
+    sem_acquire($token);
+    $file = fopen($sessionFile, 'w');
+    if(!$file)
+      echo '{ "error": 1, "status": "Erro ao registrar nova sessão '.$_REQUEST['sessionId'].'"}';
+    else{
+      fwrite($file, $clientId.PHP_EOL);
+      fclose($file);
+      echo '{ "error": 0, "status": "Sessão registrada:'.$sessionId.'"}';
+    }
+    sem_release($token); 
+  }
+ }
 
-        $scope.confirmNewRole = function(){
-           $scope.message = "Registrando novo cargo...";
+ if($action=='newRole'){
+  if (isSessionOwner($sessionFile, $clientId)){
+    sem_acquire($token);
+    $file = fopen($sessionFile, 'w');
+    $fileV = fopen($sessionVotesFile, 'w');
+    $fileC = fopen($sessionClientsFile, 'w');
+    if(!$file OR !$fileV OR !$fileC)
+      echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
+    else{
+      fwrite($file, $clientId.PHP_EOL);
+      fwrite($file, $_REQUEST['roleName'].PHP_EOL);
+      fwrite($file, $_REQUEST['roleOptions'].PHP_EOL);
+      fwrite($file, $_REQUEST['roleMaxOptions'].PHP_EOL);
 
-           $scope.roleOptionsTxt = $scope.roleOptionsTxt.replace(/\n/g, "<br>");
-           actionService.getData($scope, 'newRole').then(
-             function(response){
-                $scope.message = response.data.status;
-                beepOk();
-                setTimeout($scope.startResults, 1000);
-             });
-        };
+      fwrite($fileC, 1);
 
-        $scope.startVote = function(){
-           $scope.status = "waitNewRole";
-           $scope.message = "Aguardando nova votação...";
-           $scope.roleVote = "";
-           actionService.getData($scope, 'results').then(
-             function(response){
-               try{
-                 if(response.data.roleName && response.data.roleName != "" && $scope.roleName != response.data.roleName){
-                   $scope.roleName = response.data.roleName;
-                   $scope.roleOptions = new Array();
-                   var options = response.data.roleOptions.split("<br>");
-                   for(var i in options){
-                     $scope.roleOptions.push({"name": options[i], "selected": false});
-                   }
-                   $scope.roleMaxOptions = response.data.roleMaxOptions;
-                   $scope.status = "vote";
-                   $scope.message = "Votação autorizada";
-                 }else{
-                    setTimeout($scope.startVote, 2000);
-                 }
-               }catch(error){
-                   $scope.message = error.message;
-                   setTimeout($scope.startVote, 2000);
-               }
-             });
-        };
+      fclose($file);
+      fclose($fileV);
+      fclose($fileC);
 
-        $scope.updateRoleVote = function(){
-           $scope.roleVote = [];
-           for(var i in $scope.roleOptions)
-              if($scope.roleOptions[i].selected)
-                $scope.roleVote.push($scope.roleOptions[i].name);
-           if($scope.roleVote.length < $scope.roleMaxOptions)
-              $scope.message = "Selecione mais " + ($scope.roleMaxOptions - $scope.roleVote.length) + " opção(ões).";
-           else if($scope.roleVote.length > $scope.roleMaxOptions)
-              $scope.message = "Desmarque " + ($scope.roleVote.length - $scope.roleMaxOptions) + " opção(ões).";
-           else $scope.message = "Tudo certo! Clique em confirmar.";
-        };
+      echo '{ "error": 0, "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
+    }
+    sem_release($token); 
+  }else{
+   echo '{ "error": 1, "status": "Sessão controlada por outro cliente:'.$_REQUEST['sessionId'].'"}';
+  }
+ }
 
-        $scope.confirmVote = function(){
-           $scope.roleVote = [];
-           for(var i in $scope.roleOptions)
-              if($scope.roleOptions[i].selected)
-                $scope.roleVote.push($scope.roleOptions[i].name);
-           if($scope.roleVote.length != $scope.roleMaxOptions){
-              $scope.message = "Erro: Você selecionou " + $scope.roleVote.length + " opções. Escolha " + $scope.roleMaxOptions + ".";
-              beepError();
-              return;
-           }
-           $scope.status = "confirmVote";
-           $scope.message = "Registrando o voto...";
-           actionService.getData($scope, 'newVote').then(
-             function(response){
-                $scope.message = response.data.status;
-                if(response.data.error == 0)
-                   beepOk();
-                else
-                   beepError();
-                setTimeout($scope.startVote, 5000);
-             });
-        };
+ if($action=='newVote'){
+  $file = fopen($sessionFile, 'r');
+  if(!$file){
+    echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
+    return;
+  }else{
+    $sessionOwner = rtrim(fgets($file));
+    $roleName = rtrim(fgets($file));
+  }
 
-        $scope.startResults = function(){
-           $scope.status = "results";
-           if($scope.sessionId == "Não definido")
-             $scope.sessionId = prompt("Digite a chave da nova sessão de votação que você está criando");
-           else{
-            }
+  if($roleName != $_REQUEST['roleName']){
+    echo '{ "error": 1, "status": "A votação atual não corresponde mais a '.$_REQUEST['roleName'].'"}';
+    return;
+  }
 
-           stop = $interval(function(){
-             $scope.message = "Atualizando...";
-             actionService.getData($scope, 'results').then(
-               function(response){
-                 if(response.data.error){
-                   $scope.message = response.data.status;
-                 }else{
-                  $scope.roleName = response.data.roleName;
-                  $scope.roleMaxOptions = response.data.roleMaxOptions;
-                   $scope.roleVotesCount = 0;
-                   var votes  = {};
-                   response.data.roleVotes.forEach(function(item, index){
-                     if(votes[item]) votes[item] = votes[item] +1;
-                     else votes[item] = 1;
-                     $scope.roleVotesCount++;
-                   });
-                   $scope.roleVotes = [];
-                   for(var k in votes){
-                     $scope.roleVotes.push({"roleName": k, "total": votes[k]});
-                   }
-                   $scope.message = "Atualizado";
-                 }
-               });
-          }, 2000);
-        };
+  sem_acquire($token);
 
-        $scope.newSession = function(){
-           $scope.sessionId = prompt("Digite a chave da nova sessão de votação que você está criando");
-           $scope.message = "Iniciando nova sessão " + $scope.sessionId + "...";
+  $file = fopen($sessionFile, 'a');
+  $fileV = fopen($sessionVotesFile, 'r');
+  if(!$file OR !$fileV)
+    echo '{ "error": 1, "status": "Erro ao registrar votação na sessão '.$_REQUEST['sessionId'].'"}';
+  else{
+    /** Check one vote per client */
+    $foundVote = false;
+    while(!feof($fileV)){
+	  $line = rtrim(fgets($fileV));
+      $vote = explode ("," , $line);
+      if($vote[0] == $clientId){
+         $foundVote = true;
+         break;
+      }
+    }
+    fclose($fileV);
+    $fileV = fopen($sessionVotesFile, 'a');
+	  
+    if($foundVote){
+      echo '{ "error": 1, "status": "Erro ao votar. Voto já foi registrado anteriormente para '.$_REQUEST['roleName'].'"}';
+    }else{
+      $roleVotes = explode ("," , $_REQUEST['roleVote']);
+      foreach ($roleVotes as &$value) {
+        fwrite($file, $value.PHP_EOL);
+      }    
+      fwrite($fileV, $clientId.",".$_REQUEST['clientSeq'].PHP_EOL);
+      echo '{ "error": 0, "status": "Novo voto registrado para '.$_REQUEST['roleVote'].'"}';
+    }
 
-           actionService.getData($scope, 'newSession').then(
-             function(response){
-                $scope.message = response.data.status;
-                if(response.data.error == 0){
-                  $scope.startNewRole();
-                  $scope.sessionAdmin = true; // Identify when a user starts a session and may see results and add new role
-                }
-             });
-        };
+    fclose($fileV);
+    fclose($file);
+  
+  }
+  sem_release($token); 
+ }
 
-        $scope.joinSession = function(){
-            $scope.sessionId = prompt("Digite a chave da sessão de votação na qual você quer participar");
-            $scope.startVote();
-        };
+ if($action=='startVote'){
+  sem_acquire($token);
+  $file = fopen($sessionFile, 'r');
+  $fileV = fopen($sessionVotesFile, 'r');
+  $fileC = fopen($sessionClientsFile, 'r');
+  if(!$file OR !$fileV OR !$fileC)
+    echo '{ "error": 1, "status": "Erro ao iniciar a votação na sessão '.$_REQUEST['sessionId'].'"}';
+  else{
+    /** Check one vote per client */
+    $foundVote = false;
+    while(!feof($fileV)){
+	  $line = rtrim(fgets($fileV));
+      $vote = explode ("," , $line);
+      if($vote[0] == $clientId){
+         $foundVote = true;
+         break;
+      }
+    }
+    
+    if(!$foundVote){
+        $sessionOwner = rtrim(fgets($file));
+        $roleName = rtrim(fgets($file));
+        $roleOptions = rtrim(fgets($file));
+        $roleMaxOptions = (int)rtrim(fgets($file));
 
-       $scope.shareSession = function(){
-			const shareData = {
-  				title: 'Vote :' + $scope.roleName,
-  				text: 'Participe da votação para :' + $scope.roleName,
-  				url: './?'+$scope.sessionId,
-			};
-		        if(navigator.share)
-				navigator.share(shareData);
-       };
+        $clientSeq =  (int)rtrim(fgets($fileC));
 
-        //Detecta sessão passada na URL
-        if(window.location.search != ""){
-		  $scope.sessionId = window.location.search.substring(1);
-		  $scope.startVote();
-		};
+        fclose($fileC);
+        $fileC = fopen($sessionClientsFile, 'w');
+        fwrite($fileC, $clientSeq+1);
+    
+        $results = array("roleName"=>$roleName, "roleOptions"=>$roleOptions, "roleMaxOptions"=>$roleMaxOptions, "clientSeq"=>$clientSeq, "sessionAdmin"=> ($sessionOwner==$clientId));
 
-});
+        echo json_encode($results);
+    }else
+       echo '{ "error": 1, "status": "Voto já foi registrado anteriormente para '.$_REQUEST['roleName'].'. Aguarde a próxima votação."}';
 
-function beepError() {
-    var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");
-   snd.volume = 1; 
-   snd.play();
-}
+  }
+  fclose($file);
+  fclose($fileV);
+  fclose($fileC);
 
-function beepOk() {
-  var snd = new Audio("toque.mp3");
-  snd.play();
-}
+  sem_release($token);
+ }
+
+ if($action=='results'){
+  $file = fopen($sessionFile, 'r');
+  $fileV = fopen($sessionVotesFile, 'r');
+  $fileC = fopen($sessionClientsFile, 'r');
+  if(!$file)
+    echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
+  else{
+    $sessionOwner = rtrim(fgets($file));
+    $roleName = rtrim(fgets($file));
+    $roleOptions = rtrim(fgets($file));
+    $roleMaxOptions = (int)rtrim(fgets($file));
+    $roleVotes = array();
+    while(!feof($file)){
+      $line = fgets($file);
+      if($line) $roleVotes[] = rtrim($line); //Last line empty
+    }
+
+    $votesClients = array();
+    while(!feof($fileV)){
+      $voteClientSeq = explode ("," , fgets($fileV))[1];
+      if($voteClientSeq) $votesClients[] = rtrim($voteClientSeq);
+    }
+
+    $clientSeq = (int)rtrim(fgets($fileC)-1);
+
+    fclose($file);
+    fclose($fileV);
+    fclose($fileC);
+
+    $results = array("roleName"=>$roleName, "roleOptions"=>$roleOptions, "roleMaxOptions"=>$roleMaxOptions, "roleVotes"=>$roleVotes, "votesClients"=>$votesClients, "clientSeq"=>$clientSeq, "sessionAdmin"=> ($sessionOwner==$clientId));
+
+    echo json_encode($results);
+  }
+ }
+?>

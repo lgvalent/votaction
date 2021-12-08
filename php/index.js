@@ -1,11 +1,11 @@
-﻿var app = angular.module("votaction", []); 
+var app = angular.module("votaction", []); 
 
 app.service('actionService', function($http) {
   this.getData = function(scope, action) {
       console.log("Action:"+action);
       return $http({
           method: 'GET',
-          url: 'action.php?sessionId=' + scope.sessionId + '&action=' + action + '&roleName=' + scope.roleName+ '&roleOptions=' + scope.roleOptionsTxt+ '&roleMaxOptions=' + scope.roleMaxOptions+ '&roleVote=' + scope.roleVote
+          url: 'action.php?sessionId=' + scope.sessionId + '&action=' + action + '&roleName=' + scope.roleName+ '&roleOptions=' + scope.roleOptionsTxt+ '&roleMaxOptions=' + scope.roleMaxOptions + '&roleVote=' + scope.roleVote + '&clientSeq=' + scope.clientSeq
       }).success(function(response){
         return response;
       }).error(function(response){
@@ -26,6 +26,8 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
         $scope.roleVotesCount = 0;
 
         $scope.sessionId = "Não definido"; // Defina com um ID válido para agilizar os teste
+
+        $scope.clientSeq = 0;
 
         $scope.startNewRole = function(){
            $scope.status = "newRole";
@@ -57,11 +59,12 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            $scope.status = "waitNewRole";
            $scope.message = "Aguardando nova votação...";
            $scope.roleVote = "";
-           actionService.getData($scope, 'results').then(
+           actionService.getData($scope, 'startVote').then(
              function(response){
                try{
                  if(response.data.roleName && response.data.roleName != "" && $scope.roleName != response.data.roleName){
                    $scope.roleName = response.data.roleName;
+                   $scope.clientSeq = response.data.clientSeq;
                    $scope.roleOptions = new Array();
                    var options = response.data.roleOptions.split("<br>");
                    for(var i in options){
@@ -131,7 +134,10 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
                  }else{
                   $scope.roleName = response.data.roleName;
                   $scope.roleMaxOptions = response.data.roleMaxOptions;
-                   $scope.roleVotesCount = 0;
+                  $scope.roleVotesCount = 0;
+                  $scope.sessionAdmin = response.data.sessionAdmin;
+
+                  $scope.clientSeq = response.data.clientSeq;
                    var votes  = {};
                    response.data.roleVotes.forEach(function(item, index){
                      if(votes[item]) votes[item] = votes[item] +1;
@@ -142,6 +148,23 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
                    for(var k in votes){
                      $scope.roleVotes.push({"roleName": k, "total": votes[k]});
                    }
+                   var div = document.getElementById("votesClients");
+                   div.innerHTML = "";
+                   var seq = 1;
+                   while (seq <= $scope.clientSeq){
+                     var node = document.createElement("LI");
+                     var textnode = document.createTextNode(seq);
+                     node.appendChild(textnode);
+                     for(var i = 0; i < response.data.votesClients.length; i++){
+                        if(response.data.votesClients[i] == seq){
+                            var textnode = document.createTextNode(" - Votou");
+                            node.appendChild(textnode);
+                        } 
+                     } 
+                     document.getElementById("votesClients").appendChild(node);
+                     seq++;
+                   }
+
                    $scope.message = "Atualizado";
                  }
                });
@@ -166,6 +189,21 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
             $scope.sessionId = prompt("Digite a chave da sessão de votação na qual você quer participar");
             $scope.startVote();
         };
+
+       $scope.shareSession = function(){
+			const shareData = {
+  				title: 'Vote :' + $scope.roleName,
+  				text: 'Participe da votação para :' + $scope.roleName,
+  				url: './?'+$scope.sessionId,
+			};
+	        if(navigator.share)
+				navigator.share(shareData);       };
+
+        //Detecta sessão passada na URL
+        if(window.location.search != ""){
+		  $scope.sessionId = window.location.search.substring(1);
+		  $scope.startVote();
+		};
 
 });
 
