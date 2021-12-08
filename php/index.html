@@ -31,7 +31,7 @@
       {{clientSeq}}
     </div>
 	<div class="page-header">
-		<h1>Sistema de votação online<a href="#" onclick="location.reload(true)">&reg;</a></h1>
+		<h1>Sistema de votação<a href="#" onclick="location.reload(true)">&reg;</a></h1>
 		<p class=" text-right">Seção atual: <span class="badge badge-secondary">{{sessionId}}<button ng-click="shareSession()" title="Compartilhar sessão">&#10282;</button></span></p>
 	</div>
 	<div ng-show="status=='menu'" class="w3-container">
@@ -56,7 +56,7 @@
 				</div>
 
 				<div class="form-group">
-	 			<label class="control-label">Nomes indicados</label> <a ng-click="getSuggestions()" href="#">&#11015;obter nomes sugeridos pelos eleitores</a> | <a onclick="navigator.clipboard.readText().then(function(data){var scope = angular.element(document.getElementById('roleOptions')).scope(); scope.roleOptionsTxt = data; scope.$apply();})" href="#">&#x2398;colar</a>
+	 			<label class="control-label">Nomes indicados</label> <a ng-click="getSuggestions()" href="">&#11015;obter nomes sugeridos pelos eleitores</a> | <a onclick="navigator.clipboard.readText().then(function(data){var scope = angular.element(document.getElementById('roleOptions')).scope(); scope.roleOptionsTxt = data; scope.$apply();})" href="">&#x2398;colar</a>
 	 			<textarea id="roleOptions" required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea>
 				</div>
 
@@ -101,7 +101,7 @@
 			<p class="card-title">Nome do cargo: <span class="badge badge-secondary">{{roleName}}</span></p>
 			<p class="card-text">Até <span class="badge badge-secondary">{{roleMaxOptions}}</span> voto(s) por pessoa.</p>
 			<label>Total de votos:</label> <span class="badge badge-secondary">{{roleVotesCount}}</span> | Aprox. <span class="badge badge-secondary">{{roleVotesCount/roleMaxOptions | number: 0}}</span> pessoas já votaram.
-            <a onclick="navigator.clipboard.writeText(document.getElementById('resultList').innerText)"href="#">&#x2398;copiar</a><br>
+            <a onclick="navigator.clipboard.writeText(document.getElementById('resultList').innerText)"href="">&#x29C9;copiar resultado</a><br>
 
 			<ol id="resultList" class="container">
 				<li ng-repeat="x in roleVotes | orderBy: 'total': true" class="d-flex justify-content-between">
