@@ -5,7 +5,7 @@ app.service('actionService', function($http) {
       console.log("Action:"+action);
       return $http({
           method: 'GET',
-          url: 'action.php?sessionId=' + scope.sessionId + '&action=' + action + '&roleName=' + scope.roleName+ '&roleOptions=' + scope.roleOptionsTxt+ '&roleMaxOptions=' + scope.roleMaxOptions + '&roleVote=' + scope.roleVote + '&clientSeq=' + scope.clientSeq
+          url: 'action.php?sessionId=' + scope.sessionId + '&action=' + action + '&roleName=' + scope.roleName+ '&roleOptions=' + scope.roleOptionsTxt + '&roleMaxOptions=' + scope.roleMaxOptions + '&roleVote=' + scope.roleVote + '&clientSeq=' + scope.clientSeq
       }).success(function(response){
         return response;
       }).error(function(response){
@@ -36,6 +36,8 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
            $scope.roleOptionsTxt = "";
            $scope.roleOptions = [];
            $scope.roleMaxOptions = 1;
+
+           $scope.suggestions = "";
 
            if(stop){
               $interval.cancel(stop);
@@ -197,10 +199,39 @@ app.controller("adminCtrl", function($scope, actionService, $interval) {
   				url: './?'+$scope.sessionId,
 			};
 	        if(navigator.share)
-				navigator.share(shareData);       };
+				navigator.share(shareData);       
+        };
 
-        //Detecta sessão passada na URL
-        if(window.location.search != ""){
+       $scope.suggest = function(){
+           $scope.roleOptionsTxt = $scope.roleOptionsTxt.replace(/\n/g, "<br>");
+           actionService.getData($scope, 'suggest').then(
+             function(response){
+                $scope.message = response.data.status;
+                if(response.data.error == 0){
+                  $scope.roleOptionsTxt = "";
+                } else {
+                   beepError();
+                }
+
+             });
+        };
+
+       $scope.getSuggestions = function(){
+           actionService.getData($scope, 'getSuggestions').then(
+             function(response){
+                if(response.data.error == 0){
+//                  $scope.suggestions = response.data.status.toString().replace(/\"\[\]/g,"");
+                  $scope.roleOptionsTxt = response.data.status.join("\n");
+                } else {
+                   $scope.message = response.data.status;
+                   beepError();
+                }
+
+             });
+        };
+
+       //Detecta sessão passada na URL
+       if(window.location.search != ""){
 		  $scope.sessionId = window.location.search.substring(1);
 		  $scope.startVote();
 		};

@@ -56,11 +56,24 @@
 				</div>
 
 				<div class="form-group">
-	 			<label class="control-label">Nomes indicados</label>
-	 			<textarea  required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea>
+	 			<label class="control-label">Nomes indicados</label> <a ng-click="getSuggestions()" href="#">&#11015;obter nomes sugeridos pelos eleitores</a> | <a onclick="navigator.clipboard.readText().then(function(data){alert(data);})" href="#"> &#x2398;colar</a>
+	 			<textarea required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea>
 				</div>
 
 				<button class="btn btn-success btn-block" ng-click="confirmNewRole()" ng-disabled="newRoleForm.$invalid">&#10004; Iniciar votação</button>
+			</form>
+		</div>
+	</div>
+	<div ng-show="status=='waitNewRole'" class="card">
+		<div class="card-header">Sugira nomes para a próxima votação.</div>
+		<div class="card-body">
+			<form>
+				<div class="form-group">
+	 			<label class="control-label">Nomes a sugerir</label>
+	 			<textarea  required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Sugira os nomes aqui, separados por ENTER e sem linhas em branco"></textarea>
+				</div>
+
+				<button class="btn btn-success btn-block" ng-click="suggest()" ng-disabled="newRoleForm.$invalid">&#10004; Enviar sugestões</button>
 			</form>
 		</div>
 	</div>
@@ -87,9 +100,10 @@
 		<div class="card-body">
 			<p class="card-title">Nome do cargo: <span class="badge badge-secondary">{{roleName}}</span></p>
 			<p class="card-text">Até <span class="badge badge-secondary">{{roleMaxOptions}}</span> voto(s) por pessoa.</p>
-			<label>Total de votos:</label> <span class="badge badge-secondary">{{roleVotesCount}}</span> | Aprox. <span class="badge badge-secondary">{{roleVotesCount/roleMaxOptions | number: 0}}</span> pessoas já votaram.<br>
+			<label>Total de votos:</label> <span class="badge badge-secondary">{{roleVotesCount}}</span> | Aprox. <span class="badge badge-secondary">{{roleVotesCount/roleMaxOptions | number: 0}}</span> pessoas já votaram.
+            <a onclick="navigator.clipboard.writeText(document.getElementById('resultList').innerText)"href="#">&#x2398;copiar</a><br>
 
-			<ol class="container">
+			<ol id="resultList" class="container">
 				<li ng-repeat="x in roleVotes | orderBy: 'total': true" class="d-flex justify-content-between">
 					{{$index+1}}º - {{x.roleName}} <span><span ng-if="$index<roleMaxOptions && !(($index<roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions].total==x.total) || ($index>=roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions-1].total==x.total))" >(Eleito)</span><span ng-if="($index<roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions].total==x.total) || ($index>=roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions-1].total==x.total)" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
 				</li>
@@ -108,7 +122,7 @@
 		</div>
 	 </div>
 </div>
-<p class=" text-right"> <small>Desenvolvido por <a href="mailto:lucio(a)valentin.com.br">Lucio Valentin<a/>: <i>versão 1.0</i></small></p>
+<p class=" text-right"> <small>Desenvolvido por <a href="mailto:lucio(a)valentin.com.br">Lucio Valentin<a/>: <i>versão 2.0</i></small></p>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>

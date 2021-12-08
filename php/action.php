@@ -21,6 +21,8 @@
  $sessionFile = 'sessions/'.$sessionId;
  $sessionVotesFile = 'sessions/'.$sessionId.'.votes';
  $sessionClientsFile = 'sessions/'.$sessionId.'.clients';
+ $sessionSuggestionsFile = 'sessions/'.$sessionId.'.suggestions';
+
  if (!file_exists('sessions')) mkdir('sessions', 0777, true);
  
  /** Client identification */
@@ -38,6 +40,7 @@
         unlink($sessionFile);
         unlink($sessionVotesFile);
         unlink($sessionClientsFile);
+        unlink($sessionSuggestionsFile);
     }
   echo '{ "error": 0, "status": "Sessão apagada:'.$sessionId.'"}';
  }
@@ -48,11 +51,13 @@
   }else{
     sem_acquire($token);
     $file = fopen($sessionFile, 'w');
+    $fileS = fopen($sessionSuggestionsFile, 'w');
     if(!$file)
       echo '{ "error": 1, "status": "Erro ao registrar nova sessão '.$_REQUEST['sessionId'].'"}';
     else{
       fwrite($file, $clientId.PHP_EOL);
       fclose($file);
+      fclose($fileS);
       echo '{ "error": 0, "status": "Sessão registrada:'.$sessionId.'"}';
     }
     sem_release($token); 
@@ -65,6 +70,7 @@
     $file = fopen($sessionFile, 'w');
     $fileV = fopen($sessionVotesFile, 'w');
     $fileC = fopen($sessionClientsFile, 'w');
+    $fileS = fopen($sessionSuggestionsFile, 'w');
     if(!$file OR !$fileV OR !$fileC)
       echo '{ "error": 1, "status": "Erro ao abrir votação da sessão '.$_REQUEST['sessionId'].'"}';
     else{
@@ -78,6 +84,7 @@
       fclose($file);
       fclose($fileV);
       fclose($fileC);
+      fclose($fileS);
 
       echo '{ "error": 0, "status": "Novo cargo registrado:'.$_REQUEST['roleName'].'"}';
     }
@@ -219,4 +226,52 @@
     echo json_encode($results);
   }
  }
+
+ if($action=='suggest'){
+  sem_acquire($token);
+  $fileS = fopen($sessionSuggestionsFile, 'r');
+  if(!$fileS)
+    echo '{ "error": 1, "status": "Erro ao abrir arquivos de sugestões da sessão '.$_REQUEST['sessionId'].'"}';
+  else{
+    $suggestions = explode ("<br>" , $_REQUEST['roleOptions']);
+    while(!feof($fileS)){
+	  $line = rtrim(fgets($fileS));
+      $i = count($suggestions);
+      while($i > 0){
+        if(strtoupper($line) == strtoupper($suggestions[$i-1]))
+            unset($suggestions[$i-1]);
+        $i--;  
+      }
+    }
+    if(count($suggestions)>0){
+        fclose($fileS);
+        $fileS = fopen($sessionSuggestionsFile, 'a');
+        foreach ($suggestions as &$value) {
+            fwrite($fileS, $value.PHP_EOL);
+        }    
+       echo '{ "error": 0, "status": "Sugestões registradas com sucesso! Aguarde a votação."}';
+    }else
+       echo '{ "error": 0, "status": "Nenhuma sugestão nova encontrada. Aguarde a próxima votação."}';
+
+  }
+  fclose($fileS);
+  sem_release($token);
+ }
+
+ if($action=='getSuggestions'){
+  $fileS = fopen($sessionSuggestionsFile, 'r');
+  if(!$fileS)
+    echo '{ "error": 1, "status": "Erro ao abrir arquivos de sugestões da sessão '.$_REQUEST['sessionId'].'"}';
+  else{
+    $results = array();
+    while(!feof($fileS)){
+	  $line = rtrim(fgets($fileS));
+      array_push($results, $line);
+    }
+    echo '{ "error": 0, "status": '.json_encode($results).'}';
+  }
+  fclose($fileS);
+ }
+
+
 ?>
