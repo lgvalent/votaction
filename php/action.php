@@ -1,4 +1,17 @@
 <?php
+/* https://sourceforge.net/p/phpcrawl/discussion/307696/thread/35f1252e/ Windows system doesn't have sem_get() */
+if (!function_exists('sem_get')) {
+  function sem_get($key) {
+    return fopen(__FILE__ . '.sem.' . $key, 'w+');
+  }
+  function sem_acquire($sem_id) {
+    return flock($sem_id, LOCK_EX);
+  }
+  function sem_release($sem_id) {
+    return flock($sem_id, LOCK_UN);
+  }
+}
+
  $sessionOwner = null;
  function isSessionOwner($sessionFile, $clientId){
   global $sessionOwner;
