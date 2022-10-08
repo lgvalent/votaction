@@ -276,11 +276,7 @@ if (!function_exists('sem_get')) {
   if(!$fileS)
     echo '{ "error": 1, "status": "Erro ao abrir arquivos de sugestões da sessão '.$_REQUEST['sessionId'].'"}';
   else{
-    $results = array();
-    while(!feof($fileS)){
-	  $line = rtrim(fgets($fileS));
-      array_push($results, $line);
-    }
+    $results = file($sessionSuggestionsFile, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
     echo '{ "error": 0, "status": '.json_encode($results).'}';
   }
   fclose($fileS);
