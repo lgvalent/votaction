@@ -93,8 +93,6 @@ if (!function_exists('sem_get')) {
       fwrite($file, $_REQUEST['roleOptions'].PHP_EOL);
       fwrite($file, $_REQUEST['roleMaxOptions'].PHP_EOL);
 
-      fwrite($fileC, 1);
-
       fclose($file);
       fclose($fileV);
       fclose($fileC);
@@ -186,12 +184,25 @@ if (!function_exists('sem_get')) {
         $roleOptions = rtrim(fgets($file));
         $roleMaxOptions = (int)rtrim(fgets($file));
 
-        $clientSeq =  (int)rtrim(fgets($fileC));
+        /** Check one clientSeq per client */
+        $clients = file($sessionClientsFile, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+        $clientSeq =  count($clients) + 1;
+        $foundClient = false;
+        foreach($clients as $client){
+            $clientData = explode(",", $client);
+            if($clientData[0] == $clientId){
+                $clientSeq = $clientData[1];
+                $foundClient = true;
+                break;
+            }
+        }
 
-        fclose($fileC);
-        $fileC = fopen($sessionClientsFile, 'w');
-        fwrite($fileC, $clientSeq+1);
-    
+        if(!$foundClient){
+            fclose($fileC);
+            $fileC = fopen($sessionClientsFile, 'a');
+            fwrite($fileC, $clientId.",".$clientSeq.PHP_EOL);    
+        }
+
         $results = array("roleName"=>$roleName, "roleOptions"=>$roleOptions, "roleMaxOptions"=>$roleMaxOptions, "clientSeq"=>$clientSeq, "sessionAdmin"=> ($sessionOwner==$clientId));
 
         echo json_encode($results);
@@ -228,7 +239,7 @@ if (!function_exists('sem_get')) {
         $vote = explode("," , $vote)[1];
     }
 
-    $clientSeq = (int)rtrim(fgets($fileC)-1);
+    $clientSeq = count(file($sessionClientsFile, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES));
 
     fclose($file);
     fclose($fileV);
