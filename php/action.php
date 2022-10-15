@@ -168,11 +168,13 @@ if (!function_exists('sem_get')) {
     echo '{ "error": 1, "status": "Erro ao iniciar a votação na sessão '.$_REQUEST['sessionId'].'"}';
   else{
     /** Check one vote per client */
+    $clientSeq = -1;
     $foundVote = false;
     while(!feof($fileV)){
 	  $line = rtrim(fgets($fileV));
       $vote = explode ("," , $line);
       if($vote[0] == $clientId){
+         $clientSeq = $vote[1];
          $foundVote = true;
          break;
       }
@@ -207,7 +209,7 @@ if (!function_exists('sem_get')) {
 
         echo json_encode($results);
     }else
-       echo '{ "error": 1, "status": "Voto já foi registrado anteriormente para '.$_REQUEST['sessionId'].'. Aguarde a próxima votação."}';
+       echo '{ "error": 1, "status": "O eleitor '.$clientSeq.' já votou na '.$_REQUEST['sessionId'].'. Aguarde a próxima votação."}';
 
   }
   fclose($file);
