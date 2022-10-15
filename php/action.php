@@ -1,16 +1,17 @@
 <?php
 /* https://sourceforge.net/p/phpcrawl/discussion/307696/thread/35f1252e/ Windows system doesn't have sem_get() */
 if (!function_exists('sem_get')) {
-  function sem_get($key) {
-    return fopen(__FILE__ . '.sem.' . $key, 'w+');
-  }
-  function sem_acquire($sem_id) {
-    return flock($sem_id, LOCK_EX);
-  }
-  function sem_release($sem_id) {
-    return flock($sem_id, LOCK_UN);
-  }
-}
+                function sem_get($key) {
+                    return fopen(__FILE__ . '.sem.' . $key, 'w+');
+                }
+                function sem_acquire($sem_id) {
+                    return flock($sem_id, LOCK_EX);
+                }
+                function sem_release($sem_id) {
+                    return flock($sem_id, LOCK_UN);
+                }
+            }
+
 
  $sessionOwner = null;
  function isSessionOwner($sessionFile, $clientId){
@@ -146,7 +147,7 @@ if (!function_exists('sem_get')) {
       echo '{ "error": 1, "status": "Erro ao votar. Voto já foi registrado anteriormente para '.$_REQUEST['roleName'].'"}';
     }else{
       $roleVotes = explode ("," , $_REQUEST['roleVote']);
-      foreach ($roleVotes as &$value) {
+      foreach ($roleVotes as $value) {
         fwrite($file, $value.PHP_EOL);
       }    
       fwrite($fileV, $clientId.",".$_REQUEST['clientSeq'].PHP_EOL);
@@ -195,7 +196,7 @@ if (!function_exists('sem_get')) {
 
         echo json_encode($results);
     }else
-       echo '{ "error": 1, "status": "Voto já foi registrado anteriormente para '.$_REQUEST['roleName'].'. Aguarde a próxima votação."}';
+       echo '{ "error": 1, "status": "Voto já foi registrado anteriormente para '.$_REQUEST['sessionId'].'. Aguarde a próxima votação."}';
 
   }
   fclose($file);
@@ -222,10 +223,9 @@ if (!function_exists('sem_get')) {
       if($line) $roleVotes[] = rtrim($line); //Last line empty
     }
 
-    $votesClients = array();
-    while(!feof($fileV)){
-      $voteClientSeq = explode ("," , fgets($fileV))[1];
-      if($voteClientSeq) $votesClients[] = rtrim($voteClientSeq);
+    $votesClients = file($sessionVotesFile, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+    foreach($votesClients as &$vote){
+        $vote = explode("," , $vote)[1];
     }
 
     $clientSeq = (int)rtrim(fgets($fileC)-1);
