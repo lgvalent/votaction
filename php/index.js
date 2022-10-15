@@ -76,6 +76,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
             $scope.status = "vote";
             $scope.message = "Votação autorizada";
           } else {
+            $scope.message = response.data.status;
             setTimeout($scope.startVote, 2000);
           }
         } catch (error) {
