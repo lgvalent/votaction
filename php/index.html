@@ -81,21 +81,28 @@
 			</form>
 		</div>
 	</div>
-	<div ng-show="status=='results'" class="card">
+	<div id="results" ng-show="status=='results'" class="card">
 		<div class="card-header d-flex justify-content-between">Apuração atual
             <span>
-                <a ng-click="copyResultNames()"href="" title="Copiar os nomes do resultado"><i class="fas fa-file-import"></i></a>
-                <a ng-click="copyResult()"href="" title="Copiar resultado completo"><i class="fas fa-copy"></i></a>
+                <a onclick="navigator.clipboard.writeText(document.getElementById('results').innerText)"href="" title="Copiar resultado completo"><i class="fas fa-copy"></i></a>
             </span>
         </div>
 		<div class="card-body">
 			<p class="card-title">Nome do cargo: <span class="badge badge-secondary">{{roleName}}</span></p>
 			<p class="card-text">Até <span class="badge badge-secondary">{{roleMaxOptions}}</span> voto(s) por pessoa.</p>
-			<label>Total de votos:</label> <span class="badge badge-secondary">{{roleVotesCount}}</span> | Aprox. <span class="badge badge-secondary">{{roleVotesCount/roleMaxOptions | number: 0}}</span> pessoas já votaram.
+            <span class="d-flex justify-content-between">
+                <span>
+        			<label>Total de votos:</label> <span class="badge badge-secondary">{{roleVotesCount}}</span> | Aprox. <span class="badge badge-secondary">{{roleVotesCount/roleMaxOptions | number: 0}}</span> pessoas já votaram.
+                </span>
+                <span>
+                    <a ng-click="copyResultNames()"href="" title="Copiar os nomes do resultado"><i class="fas fa-file-import"></i></a>
+                    <a ng-click="copyResult()"href="" title="Copiar os nomes e totais do resultado"><i class="fas fa-copy"></i></a>
+                </span>
+            </span>
 
 			<ol id="resultList" class="container">
 				<li ng-repeat="x in roleVotes" class="d-flex justify-content-between">
-					{{$index+1}}º - {{x.roleName}} <span><span ng-if="x.elected" >(Eleito)</span><span ng-if="x.tied" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
+					<span>{{$index+1}}º - {{x.roleName}}</span><span><span ng-if="x.elected" >(Eleito)</span><span ng-if="x.tied" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
 				</li>
 			</ol>
 		</div>
