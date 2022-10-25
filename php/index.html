@@ -14,7 +14,10 @@
 <div ng-cloak ng-controller="adminCtrl" class="container" >
 	<div class="page-header">
 		<h2>Sistema de votação<a href="#" onclick="location.reload(true)">&reg;</a></h2>
-		<p class=" text-right">Seção atual: <span ng-click="shareSession()" title="Compartilhar sessão" class="badge badge-secondary">{{sessionId}} <i class="fas fa-share-alt"></i></span></p>
+		<p class=" text-right">Seção atual: 
+            <span ng-click="shareSession()" title="Compartilhar sessão" class="badge badge-secondary">{{sessionId}} <i class="fas fa-share-alt"></i></span> 
+            <a ng-show="sessionAdmin" href="action.php?sessionId={{sessionId}}&action=reset" title="Apagar a seção atual"><i class="fas fa-trash-alt"></i></a>
+        </p>
 	</div>
 	<div ng-show="status=='menu'" class="w3-container">
 		<button ng-click="newSession()" class="btn btn-success btn-block">Iniciar uma comissão</button>
