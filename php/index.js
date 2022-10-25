@@ -15,6 +15,10 @@ app.service('actionService', function ($http) {
   }
 });
 
+function promptSessionId(promptStr){
+    return prompt(promptStr).trim();
+}
+
 var stop = undefined;
 app.controller("adminCtrl", function ($scope, actionService, $interval) {
   $scope.status = "menu";
@@ -124,7 +128,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
   $scope.startResults = function () {
     $scope.status = "results";
     if ($scope.sessionId == "Não definido")
-      $scope.sessionId = prompt("Digite a chave da nova sessão de votação que você está criando");
+      $scope.sessionId = promptSessionId("Digite a chave da nova sessão de votação que você está criando");
     else {
     }
 
@@ -175,7 +179,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
   };
 
   $scope.newSession = function () {
-    $scope.sessionId = prompt("Digite a chave da nova sessão de votação que você está criando");
+    $scope.sessionId = promptSessionId("Digite a chave da nova sessão de votação que você está criando");
     $scope.message = "Iniciando nova sessão " + $scope.sessionId + "...";
 
     actionService.getData($scope, 'newSession').then(
@@ -189,7 +193,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
   };
 
   $scope.joinSession = function () {
-    $scope.sessionId = prompt("Digite a chave da sessão de votação na qual você quer participar");
+    $scope.sessionId = promptSessionId("Digite a chave da sessão de votação na qual você quer participar");
     $scope.startVote();
   };
 
