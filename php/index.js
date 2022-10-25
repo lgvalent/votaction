@@ -28,6 +28,8 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
   $scope.roleMaxOptions = 1;
   $scope.roleVote = "";
   $scope.roleVotesCount = 0;
+  $scope.roleVotes = [];
+  $scope.clientsVotes = [];
 
   $scope.sessionId = "Não definido"; // Defina com um ID válido para agilizar os teste
 
@@ -132,7 +134,10 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
     else {
     }
 
-    stop = $interval(function () {
+    stop = $interval($scope.getResults, 2000);
+  };
+
+  $scope.getResults = function (callback) {
       $scope.message = "Atualizando...";
       actionService.getData($scope, 'results').then(
         function (response) {
@@ -155,28 +160,23 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
             for (var k in votes) {
               $scope.roleVotes.push({ "roleName": k, "total": votes[k] });
             }
-            var div = document.getElementById("votesClients");
-            div.innerHTML = "";
-            var seq = 1;
-            while (seq <= $scope.clientSeq) {
-              var node = document.createElement("LI");
-              var textnode = document.createTextNode(seq);
-              node.appendChild(textnode);
-              for (var i = 0; i < response.data.votesClients.length; i++) {
-                if (response.data.votesClients[i] == seq) {
-                  var textnode = document.createTextNode(" - Votou");
-                  node.appendChild(textnode);
-                }
-              }
-              document.getElementById("votesClients").appendChild(node);
-              seq++;
-            }
+            $scope.roleVotes.sort((a,b)=>b.total-a.total);
+
+            // Check tied first to use it in elected expression check
+            $scope.roleVotes.forEach((item,index)=>{item.tied = (index<$scope.roleMaxOptions && $scope.roleVotes.length>$scope.roleMaxOptions && $scope.roleVotes[$scope.roleMaxOptions].total==item.total) || (index>=$scope.roleMaxOptions && $scope.roleVotes[$scope.roleMaxOptions-1].total==item.total)});
+
+            $scope.roleVotes.forEach((item,index)=>{item.elected = index<$scope.roleMaxOptions && !item.tied});
+
+            $scope.clientsVotes = new Array($scope.clientSeq).fill(false);
+
+            response.data.votesClients.forEach((item, index)=>{$scope.clientsVotes[+item-1] = true});
 
             $scope.message = "Atualizado";
+
+            if(typeof callback == 'function') callback();
           }
         });
-    }, 2000);
-  };
+  }
 
   $scope.newSession = function () {
     $scope.sessionId = promptSessionId("Digite a chave da nova sessão de votação que você está criando");
@@ -228,12 +228,50 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
       function (response) {
         if (response.data.error == 0) {
           $scope.roleOptionsTxt = response.data.status.join("\n");
+          $scope.message = "Sugestões obtidas com sucesso.";
         } else {
           $scope.message = response.data.status;
           beepError();
         }
       });
   };
+
+  $scope.sortSuggestions = function () {
+      $scope.roleOptionsTxt = $scope.roleOptionsTxt.split('\n').sort().join('\n');
+      $scope.message = "Nomes ordenados com sucesso.";
+  };
+
+  $scope.pasteLastResult = function () {
+      $scope.getResults(function(){
+        result = "";
+        $scope.roleVotes.forEach(function (item, index){
+            result += (index>0?"\n":"") + item.roleName + " " + (item.elected?"(Eleito)":"") + (item.tied?"(Empate)":"") + item.total + " voto" + (item.total==1?"":"s");
+        });
+        $scope.roleName += "_";
+        $scope.roleOptionsTxt = result;
+        $scope.message = "Resultado colado com sucesso.";
+      });
+  };
+
+  $scope.copyResult = function () {
+      result = "";
+      $scope.roleVotes.forEach(function (item, index){
+        result += (index>0?"\n":"") + (index+1) + "º - " + item.roleName + " " + (item.elected?"(Eleito)":"") + (item.tied?"(Empate)":"") + item.total + " voto" + (item.total==1?"":"s");
+      });
+      navigator.clipboard.writeText(result);
+      $scope.message = "Resultado copiado com sucesso.";
+  };
+
+  $scope.copyResultNames = function () {
+      result = "";
+      $scope.roleVotes.forEach(function (item, index){
+        result += (index>0?"\n":"") + item.roleName;
+      });
+      navigator.clipboard.writeText(result);
+      $scope.message = "Nomes copiados com sucesso.";
+  };
+
+
 
   //Detecta sessão passada na URL
   if (window.location.search != "") {

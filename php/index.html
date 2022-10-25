@@ -24,7 +24,8 @@
 		<div style="position: relative; padding-bottom: 56.25%; padding-top: 25px; height: 0;"><iframe width="560" height="315" src="https://www.youtube.com/embed/1a2BQQHfvW0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></iframe></div>
 	</div>
 	<div ng-show="status=='newRole'" class="card">
-		<div class="card-header">Iniciando votação de um novo cargo</div>
+		<div class="card-header d-flex justify-content-between">Iniciando votação de um novo cargo <a ng-click="pasteLastResult()" href="" title="Obter os dados da última votação"><i class="fas fa-cloud-download-alt"></i></a>
+</div>
 		<div class="card-body">
 			<form name="newRoleForm">
 				<div class="form-group">
@@ -38,7 +39,11 @@
 				</div>
 
 				<div class="form-group">
-                <label class="control-label d-flex justify-content-between">Nomes indicados <span><a ng-click="getSuggestions()" href="" title="Obter nomes sugeridos pelos eleitores"><i class="fas fa-cloud-download-alt"></i></a> | <a onclick="navigator.clipboard.readText().then(function(data){var scope = angular.element(document.getElementById('roleOptions')).scope(); scope.roleOptionsTxt = data; scope.$apply();})" href="" title="Colar"><i class="fas fa-paste"></i></a></span></label>
+                <label class="control-label d-flex justify-content-between">Nomes indicados <span>
+                	<a ng-click="getSuggestions()" href="" title="Obter nomes sugeridos pelos eleitores"><i class="fas fa-cloud-download-alt"></i></a> | 
+                	<a onclick="navigator.clipboard.readText().then(function(data){var scope = angular.element(document.getElementById('roleOptions')).scope(); scope.roleOptionsTxt = data; scope.$apply();})" href="" title="Colar"><i class="fas fa-paste"></i></a> | 
+                	<a ng-click="sortSuggestions()" href="" title="Ordenar nomes indicados"><i class="fas fa-sort-alpha-down"></i></a>
+                </span></label>
 	 			<textarea id="roleOptions" required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea>
 				</div>
 
@@ -77,21 +82,30 @@
 		</div>
 	</div>
 	<div ng-show="status=='results'" class="card">
-		<div class="card-header d-flex justify-content-between">Apuração atual<a onclick="navigator.clipboard.writeText(document.getElementById('resultList').innerText)"href="" title="Copiar resultado"><i class="fas fa-copy"></i></a></div>
+		<div class="card-header d-flex justify-content-between">Apuração atual
+            <span>
+                <a ng-click="copyResultNames()"href="" title="Copiar os nomes do resultado"><i class="fas fa-file-import"></i></a>
+                <a ng-click="copyResult()"href="" title="Copiar resultado completo"><i class="fas fa-copy"></i></a>
+            </span>
+        </div>
 		<div class="card-body">
 			<p class="card-title">Nome do cargo: <span class="badge badge-secondary">{{roleName}}</span></p>
 			<p class="card-text">Até <span class="badge badge-secondary">{{roleMaxOptions}}</span> voto(s) por pessoa.</p>
 			<label>Total de votos:</label> <span class="badge badge-secondary">{{roleVotesCount}}</span> | Aprox. <span class="badge badge-secondary">{{roleVotesCount/roleMaxOptions | number: 0}}</span> pessoas já votaram.
 
 			<ol id="resultList" class="container">
-				<li ng-repeat="x in roleVotes | orderBy: 'total': true" class="d-flex justify-content-between">
-					{{$index+1}}º - {{x.roleName}} <span><span ng-if="$index<roleMaxOptions && !(($index<roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions].total==x.total) || ($index>=roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions-1].total==x.total))" >(Eleito)</span><span ng-if="($index<roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions].total==x.total) || ($index>=roleMaxOptions && (roleVotes | orderBy:'total':true)[roleMaxOptions-1].total==x.total)" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
+				<li ng-repeat="x in roleVotes" class="d-flex justify-content-between">
+					{{$index+1}}º - {{x.roleName}} <span><span ng-if="x.elected" >(Eleito)</span><span ng-if="x.tied" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
 				</li>
 			</ol>
 		</div>
 		<div class="card-footer">
             <p><span class="badge badge-secondary">{{clientSeq}}</span> eleitores se registraram para votar até o momento.</p>
-            <div id="votesClients"></div>
+			<ol id="clientsVotes" class="container">
+				<li ng-repeat="x in clientsVotes track by $index">
+					<span ng-if="x" >Votou</span>
+				</li>
+			</ol>
         </div>
 		<button class="btn btn-primary btn-block" ng-click="startNewRole()" ng-show="sessionAdmin">&#10004; Novo cargo</button>
 	</div>
