@@ -261,10 +261,10 @@ if (!function_exists('sem_get')) {
   else{
     $suggestions = explode ("<br>" , $_REQUEST['roleOptions']);
     while(!feof($fileS)){
-	  $line = rtrim(fgets($fileS));
+	  $line = trim(fgets($fileS));
       $i = count($suggestions);
       while($i > 0){
-        if(strtoupper($line) == strtoupper($suggestions[$i-1]))
+        if(strtoupper($line) == trim(strtoupper($suggestions[$i-1])))
             unset($suggestions[$i-1]);
         $i--;  
       }
@@ -273,7 +273,7 @@ if (!function_exists('sem_get')) {
         fclose($fileS);
         $fileS = fopen($sessionSuggestionsFile, 'a');
         foreach ($suggestions as &$value) {
-            fwrite($fileS, $value.PHP_EOL);
+            fwrite($fileS, trim($value).PHP_EOL);
         }    
        echo '{ "error": 0, "status": "Sugestões registradas com sucesso! Aguarde a votação."}';
     }else
