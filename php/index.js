@@ -245,7 +245,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
       $scope.getResults(function(){
         result = "";
         $scope.roleVotes.forEach(function (item, index){
-            result += (index>0?"\n":"") + item.roleName + " " + (item.elected?"(Eleito)":"") + (item.tied?"(Empate)":"") + item.total + " voto" + (item.total==1?"":"s");
+            result += (index>0?"\n":"") + item.roleName + " " + (item.elected?"(":"") + (item.tied?"[":"") + item.total+ (item.elected?")":"") + (item.tied?"]":"");
         });
         $scope.roleName += "_";
         $scope.roleOptionsTxt = result;
