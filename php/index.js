@@ -242,6 +242,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
   };
 
   $scope.pasteLastResult = function () {
+      $scope.roleOptionsTxt = ""; // Clear before call getResults, it's sent in URL
       $scope.getResults(function(){
         result = "";
         $scope.roleVotes.forEach(function (item, index){
