@@ -102,21 +102,32 @@
                     <a ng-click="copyResult()"href="" title="Copiar os nomes e totais do resultado"><i class="fas fa-copy"></i></a>
                 </span>
             </span>
-
-			<ol id="resultList" class="container">
-				<li ng-repeat="x in roleVotes" class="d-flex justify-content-between">
-					<span>{{$index+1}}º - {{x.roleName}}</span><span><span ng-if="x.elected" >(Eleito)</span><span ng-if="x.tied" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
-				</li>
-			</ol>
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="voters-tab" data-toggle="tab" href="#voters" role="tab" aria-controls="voters" aria-selected="true">Eleitores</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="votes-tab" data-toggle="tab" href="#votes" role="tab" aria-controls="votes" aria-selected="false">Resultado</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="voters" role="tabpanel" aria-labelledby="voters-tab">
+                    <p><span class="badge badge-secondary">{{clientSeq}}</span> eleitores se registraram para votar até o momento.</p>
+                        <ol id="clientsVotes" class="container">
+                        <li ng-repeat="x in clientsVotes track by $index">
+					        <span ng-if="x" >Votou</span>
+				        </li>
+			        </ol>
+                </div>
+                <div class="tab-pane fade" id="votes" role="tabpanel" aria-labelledby="votes-tab">
+			        <ol id="resultList" class="container">
+				        <li ng-repeat="x in roleVotes" class="d-flex justify-content-between">
+				    	    <span>{{$index+1}}º - {{x.roleName}}</span><span><span ng-if="x.elected" >(Eleito)</span><span ng-if="x.tied" >(Empate)</span><span class="badge badge-secondary badge-pill px-4 py-1 mt-2">{{x.total}}</span></span>
+				        </li>
+			        </ol>
+                </div>
+            </div>
 		</div>
-		<div class="card-footer">
-            <p><span class="badge badge-secondary">{{clientSeq}}</span> eleitores se registraram para votar até o momento.</p>
-			<ol id="clientsVotes" class="container">
-				<li ng-repeat="x in clientsVotes track by $index">
-					<span ng-if="x" >Votou</span>
-				</li>
-			</ol>
-        </div>
 		<button class="btn btn-primary btn-block" ng-click="startNewRole()" ng-show="sessionAdmin">&#10004; Novo cargo</button>
 	</div>
 	<br/>
