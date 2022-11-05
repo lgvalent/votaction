@@ -240,12 +240,11 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
   };
 
   $scope.sortSuggestions = function () {
-      $scope.roleOptionsTxt = $scope.roleOptionsTxt.split('\n').sort().join('\n');
+      $scope.roleOptionsTxt = $scope.roleOptionsTxt.split('\n').sort((a,b)=> a.toLowerCase().localeCompare(b.toLowerCase())).join('\n');
       $scope.message = "Nomes ordenados com sucesso.";
   };
 
   $scope.pasteLastResult = function () {
-      $scope.roleOptionsTxt = ""; // Clear before call getResults, it's sent in URL
       $scope.getResults(function(){
         result = "";
         $scope.roleVotes.forEach(function (item, index){
