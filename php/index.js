@@ -37,6 +37,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
 
   $scope.startNewRole = function () {
     $scope.status = "newRole";
+    $('#roleName').focus(); // Focus
 
     $scope.roleName = "";
     $scope.roleOptionsTxt = "";
@@ -57,6 +58,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
     $scope.roleOptionsTxt = $scope.roleOptionsTxt.replace(/\n/g, "<br>");
     actionService.getData($scope, 'newRole').then(
       function (response) {
+        $('#myTab li:first-child a').tab('show'); // Focus
         $scope.message = response.data.status;
         beepOk();
         setTimeout($scope.startResults, 1000);
@@ -65,6 +67,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
 
   $scope.startVote = function () {
     $scope.status = "waitNewRole";
+    $('#roleOptionsTxt').focus(); // Focus
     $scope.message = "Aguardando nova votação...";
     $scope.roleVote = "";
     actionService.getData($scope, 'startVote').then(
