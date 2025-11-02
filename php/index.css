@@ -1,30 +1,36 @@
-    .textarea-with-lines {
-        display: flex;
-    }
+.textarea-with-lines {
+    display: flex;
+}
 
-    .line-numbers {
-        background-color: #f0f0f0;
-        padding: 0.3rem;
-        text-align: right;
-        border-right: 1px solid #ccc;
-        user-select: none; /* Prevent selection of line numbers */
-        overflow: hidden;
-        word-wrap: normal;
-    }
+.line-numbers {
+    background-color: #f0f0f0;
+    padding: 0.3rem;
+    text-align: right;
+    border-right: 1px solid #ccc;
+    user-select: none;
+    /* Prevent selection of line numbers */
+    overflow: hidden;
+    word-wrap: normal;
+}
 
-    .line-numbers ol {
-        margin: 0;
-        padding: 0;
-        list-style: none; /* Remove default list styling */
-    }
+.line-numbers ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* Remove default list styling */
+}
 
-    .line-numbers li {
-        line-height: 1.5; /* Match textarea line-height */
-        font-size: 0.875rem; /* Match textarea font-size if needed */
-        color: #777;
-    }
+.line-numbers li {
+    line-height: 1.5;
+    /* Match textarea line-height */
+    font-size: 0.875rem;
+    /* Match textarea font-size if needed */
+    color: #777;
+}
 
-    #roleOptions {
-        flex-grow: 1; /* Allow textarea to take remaining width */
-        resize: vertical; /* Allow vertical resizing */
-    }
+#roleOptions {
+    flex-grow: 1;
+    /* Allow textarea to take remaining width */
+    resize: vertical;
+    /* Allow vertical resizing */
+}
