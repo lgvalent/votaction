@@ -197,6 +197,7 @@ app.controller("adminCtrl", function ($scope, actionService, $interval) {
 
   $scope.joinSession = function () {
     $scope.sessionId = promptSessionId("Digite a chave da sessão de votação na qual você quer participar");
+    window.location.href = './?' + $scope.sessionId;
     $scope.startVote();
   };
 
