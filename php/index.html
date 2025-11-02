@@ -3,6 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./index.css" type="text/css">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
 	<link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">	
@@ -19,7 +20,7 @@
             <a ng-show="sessionAdmin" href="action.php?sessionId={{sessionId}}&action=reset" title="Apagar a seção atual"><i class="fas fa-trash-alt"></i></a>
         </p>
 	</div>
-	<div ng-show="status=='menu'" class="w3-container">
+	<div ng-show="status=='menu'">
 		<button ng-click="newSession()" class="btn btn-success btn-block">Iniciar uma comissão</button>
 		<button ng-click="joinSession()" class="btn btn-warning btn-block">Participar de uma comissão</button>
 		<button ng-click="startResults()" class="btn btn-primary btn-block">Resultados</button>
@@ -46,8 +47,13 @@
                 	<a ng-click="getSuggestions()" href="" title="Obter nomes sugeridos pelos eleitores"><i class="fas fa-cloud-download-alt"></i></a> | 
                 	<a onclick="navigator.clipboard.readText().then(function(data){var scope = angular.element(document.getElementById('roleOptions')).scope(); scope.roleOptionsTxt = data; scope.$apply();})" href="" title="Colar"><i class="fas fa-paste"></i></a> | 
                 	<a ng-click="sortSuggestions()" href="" title="Ordenar nomes indicados"><i class="fas fa-sort-alpha-down"></i></a>
-                </span></label>
-	 			<textarea id="roleOptions" required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"  placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea>
+				</span></label>
+				<div class="textarea-with-lines">
+					<div class="line-numbers" id="line-numbers">
+						<ol id="line-numbers-list"></ol>
+					</div>
+					<textarea id="roleOptions" required rows="10" class="form-control form-control-sm" ng-model="roleOptionsTxt"
+						placeholder="Insira os nomes separados por ENTER e sem linhas em branco"></textarea></div>
 				</div>
 
 				<button class="btn btn-success btn-block" ng-click="confirmNewRole()" ng-disabled="newRoleForm.$invalid">&#10004; Iniciar votação</button>

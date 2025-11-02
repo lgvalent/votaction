@@ -293,3 +293,34 @@ function beepOk() {
   var snd = new Audio("toque.mp3");
   snd.play();
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  const textarea = document.getElementById('roleOptions');
+  const lineNumbers = document.getElementById('line-numbers');
+  const lineNumbersList = document.getElementById('line-numbers-list');
+
+  function updateLineNumbers() {
+    const lines = textarea.value.split('\n').length;
+    lineNumbersList.innerHTML = ''; // Clear existing numbers
+    for (let i = 1; i <= lines; i++) {
+      const li = document.createElement('li');
+      li.textContent = i;
+      lineNumbersList.appendChild(li);
+    }
+  }
+
+  textarea.addEventListener('input', updateLineNumbers);
+  textarea.addEventListener('scroll', function () {
+    lineNumbers.scrollTop = this.scrollTop;
+  });
+
+  const ro = new ResizeObserver(() => {
+    const rect = textarea.getBoundingClientRect();
+    lineNumbers.style.height = `${rect.height}px`;
+//    updateLineNumbers();
+  });
+  ro.observe(textarea);
+
+  // Initial update on page load
+  updateLineNumbers();
+});
